@@ -5,7 +5,7 @@
 The repo is structured in two layers:
 
 - root `scripts/` for direct human and CI usage
-- embedded `skills/repo-skeptic/` for future vendoring into a skills/plugins repo
+- embedded `skills/repo-skeptic/` as the self-contained install payload for `skills.sh`
 
 It checks:
 
@@ -68,6 +68,8 @@ List the skills that `skills` detects in this repo:
 npx skills add williamwarlick/repo-skeptic --list
 ```
 
+An installed `repo-skeptic` skill includes its own scripts and Python implementation inside the installed skill directory. It does not rely on files outside the skill folder.
+
 Example:
 
 ```bash
@@ -90,7 +92,7 @@ This is a review assistant, not a malware verdict engine. A clean score does not
 - Thin-profile stargazer checks sample up to 25 recent stargazers and look for empty profiles.
 - Registry checks are presence checks only. They do not prove downstream adoption.
 - The scanner is intentionally heuristic-based and should be extended for your threat model.
-- The embedded skill lives at `skills/repo-skeptic/` and delegates to the root scripts so the audit entrypoints stay stable.
+- The embedded skill lives at `skills/repo-skeptic/` and now contains the Python implementation plus callable scripts, so a `skills.sh` install is functional on its own.
 
 ## Development
 

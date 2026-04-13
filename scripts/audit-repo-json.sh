@@ -2,4 +2,4 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec "${ROOT_DIR}/scripts/audit-repo.sh" "$@" --json
+exec "${ROOT_DIR}/skills/repo-skeptic/scripts/audit-repo-json.sh" "$@"

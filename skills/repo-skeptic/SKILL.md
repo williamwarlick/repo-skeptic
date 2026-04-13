@@ -6,6 +6,7 @@ description: Verify GitHub repositories before trusting them. Use when the user 
 # Repo Skeptic
 
 Use the bundled scripts from this repo instead of reconstructing the audit flow manually.
+The installed skill is self-contained: the scripts and Python implementation ship inside the skill folder.
 
 ## Quick start
 
@@ -15,7 +16,6 @@ From the repo root:
 - JSON output: `scripts/audit-repo-json.sh owner/repo`
 - Star analysis: `scripts/star-analysis.sh owner/repo`
 - Snapshot scan: `scripts/snapshot-scan.sh owner/repo`
-- Install editable CLI into `.venv`: `scripts/bootstrap.sh`
 
 ## Workflow
 
