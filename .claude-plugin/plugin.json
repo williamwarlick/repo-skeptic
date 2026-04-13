@@ -1,0 +1,20 @@
+{
+  "name": "repo-skeptic",
+  "description": "Verify GitHub repositories before trusting them",
+  "version": "0.1.0",
+  "author": {
+    "name": "William Warlick",
+    "url": "https://github.com/williamwarlick"
+  },
+  "homepage": "https://github.com/williamwarlick/repo-skeptic",
+  "repository": "https://github.com/williamwarlick/repo-skeptic",
+  "license": "MIT",
+  "keywords": [
+    "github",
+    "security",
+    "supply-chain",
+    "audit",
+    "skills"
+  ],
+  "skills": "skills/"
+}
