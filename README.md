@@ -6,7 +6,6 @@ The repo is structured in two layers:
 
 - root `scripts/` for direct human and CI usage
 - embedded `skills/repo-skeptic/` for future vendoring into a skills/plugins repo
-- root `.claude-plugin/plugin.json` for plugin-manifest compatibility
 
 It checks:
 
@@ -47,7 +46,11 @@ Or bootstrap the local environment with:
 ```bash
 ./scripts/audit-repo.sh owner/repo
 ./scripts/audit-repo-json.sh owner/repo
+./scripts/star-analysis.sh owner/repo
+./scripts/snapshot-scan.sh owner/repo
 repo-skeptic owner/repo
+repo-skeptic star-analysis owner/repo
+repo-skeptic snapshot-scan owner/repo
 repo-skeptic https://github.com/owner/repo --json
 ```
 
@@ -88,7 +91,6 @@ This is a review assistant, not a malware verdict engine. A clean score does not
 - Registry checks are presence checks only. They do not prove downstream adoption.
 - The scanner is intentionally heuristic-based and should be extended for your threat model.
 - The embedded skill lives at `skills/repo-skeptic/` and delegates to the root scripts so the audit entrypoints stay stable.
-- `.claude-plugin/plugin.json` makes the repo plugin-manifest compatible for ecosystems that consume plugin packages as well as plain skills.
 
 ## Development
 

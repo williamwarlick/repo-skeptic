@@ -13,15 +13,19 @@ From the repo root:
 
 - Text summary: `scripts/audit-repo.sh owner/repo`
 - JSON output: `scripts/audit-repo-json.sh owner/repo`
+- Star analysis: `scripts/star-analysis.sh owner/repo`
+- Snapshot scan: `scripts/snapshot-scan.sh owner/repo`
 - Install editable CLI into `.venv`: `scripts/bootstrap.sh`
 
 ## Workflow
 
 1. Normalize the target repo to `owner/repo` or a GitHub URL.
-2. Run the audit script first.
-3. Review the highest-severity findings before making any trust recommendation.
-4. Treat `low-risk` as "no high-signal heuristics fired", not as "safe".
-5. Escalate anything involving install hooks, network-exec patterns, bundled binaries, or suspicious release assets.
+2. Run `scripts/audit-repo.sh` first when the user wants an overall trust check.
+3. Run `scripts/star-analysis.sh` when the user specifically wants to inspect suspicious star growth or thin-profile stargazers.
+4. Run `scripts/snapshot-scan.sh` when the user specifically wants install-hook, suspicious-command, or bundled-binary evidence.
+5. Review the highest-severity findings before making any trust recommendation.
+6. Treat `low-risk` as "no high-signal heuristics fired", not as "safe".
+7. Escalate anything involving install hooks, network-exec patterns, bundled binaries, or suspicious release assets.
 
 ## What the audit covers
 
