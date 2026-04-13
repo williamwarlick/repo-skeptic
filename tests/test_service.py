@@ -56,6 +56,18 @@ class _FakeGitHubClient:
     def releases(self, owner: str, repo: str) -> list[dict[str, object]]:
         return []
 
+    def recent_commits(self, owner: str, repo: str, *, limit: int = 20) -> list[dict[str, object]]:
+        return [
+            {
+                "author": {"login": "owner"},
+                "commit": {"author": {"date": "2026-04-10T00:00:00Z", "name": "Owner"}},
+            },
+            {
+                "author": {"login": "contrib"},
+                "commit": {"author": {"date": "2026-04-09T00:00:00Z", "name": "Contrib"}},
+            },
+        ][:limit]
+
     def download_snapshot(self, owner: str, repo: str) -> tuple[_SnapshotHandle, Path]:
         handle = _SnapshotHandle()
         self.last_snapshot_handle = handle
@@ -105,6 +117,7 @@ class RepoSkepticServiceTests(unittest.TestCase):
         self.assertEqual(summary.target, "owner/repo")
         self.assertEqual(summary.metadata["repo"]["open_issues"], 2)
         self.assertEqual(summary.metadata["registries"], {"npm": True})
+        self.assertEqual(summary.metadata["maintenance"]["unique_recent_authors"], 2)
         self.assertTrue(client.last_snapshot_handle is not None and client.last_snapshot_handle.cleaned)
 
 

@@ -6,6 +6,7 @@ from typing import Any
 from .github_api import GitHubClient, registry_presence
 from .heuristics import (
     AuditSummary,
+    CommitContinuity,
     ScanResult,
     age_in_days,
     analyze_star_burst,
@@ -14,6 +15,7 @@ from .heuristics import (
     normalize_repo_target,
     parse_iso_datetime,
     score_findings,
+    summarize_commit_continuity,
     summarize_release_assets,
 )
 
@@ -33,6 +35,24 @@ class RepoContext:
 class SnapshotContext:
     scan_result: ScanResult
     registries: dict[str, bool]
+
+
+@dataclass(slots=True)
+class MaintenanceSummary:
+    sampled_recent_commits: int
+    last_commit_at: str | None
+    days_since_last_commit: int | None
+    unique_recent_authors: int
+    recent_authors: list[str]
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "sampled_recent_commits": self.sampled_recent_commits,
+            "last_commit_at": self.last_commit_at,
+            "days_since_last_commit": self.days_since_last_commit,
+            "unique_recent_authors": self.unique_recent_authors,
+            "recent_authors": self.recent_authors,
+        }
 
 
 @dataclass(slots=True)
@@ -107,6 +127,18 @@ class RepoSkepticService:
             registries=registry_presence(scan_result.package_names),
         )
 
+    def _summarize_maintenance(self, owner: str, repo: str) -> MaintenanceSummary:
+        commits = self.client.recent_commits(owner, repo, limit=20)
+        continuity: CommitContinuity = summarize_commit_continuity(commits)
+        last_commit_at = parse_iso_datetime(continuity.last_commit_at)
+        return MaintenanceSummary(
+            sampled_recent_commits=continuity.sampled_recent_commits,
+            last_commit_at=continuity.last_commit_at,
+            days_since_last_commit=age_in_days(last_commit_at),
+            unique_recent_authors=continuity.unique_recent_authors,
+            recent_authors=continuity.recent_authors,
+        )
+
     def star_analysis(self, target: str, *, stars: int = 200) -> StarAnalysisSummary:
         context = self._fetch_repo_context(target, stars=stars)
         repo_payload = context.repo_payload
@@ -155,12 +187,15 @@ class RepoSkepticService:
         open_prs = self.client.count_prs(owner, repo)
         contributors = len(self.client.contributors(owner, repo))
         releases = self.client.releases(owner, repo)
+        maintenance = self._summarize_maintenance(owner, repo)
         risky_release_assets = summarize_release_assets(releases)
         snapshot = self._scan_snapshot(owner, repo)
         findings = build_findings(
             owner_age_days=age_in_days(parse_iso_datetime(owner_payload.get("created_at"))),
             owner_public_repos=int(owner_payload.get("public_repos", 0)),
             repo_age_days=age_in_days(parse_iso_datetime(repo_payload.get("created_at"))),
+            days_since_last_commit=maintenance.days_since_last_commit,
+            unique_recent_commit_authors=maintenance.unique_recent_authors,
             stars=int(repo_payload.get("stargazers_count", 0)),
             forks=int(repo_payload.get("forks_count", 0)),
             open_issues=open_issues,
@@ -203,6 +238,7 @@ class RepoSkepticService:
             },
             "scan": snapshot.scan_result.as_dict(),
             "registries": snapshot.registries,
+            "maintenance": maintenance.as_dict(),
             "releases": {
                 "count": len(releases),
                 "risky_assets": risky_release_assets,

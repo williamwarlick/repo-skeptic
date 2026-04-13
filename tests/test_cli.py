@@ -2,9 +2,11 @@ import unittest
 
 from repo_skeptic.cli import (
     normalize_argv,
+    render_text,
     render_snapshot_scan_text,
     render_star_analysis_text,
 )
+from repo_skeptic.heuristics import AuditSummary
 from repo_skeptic.service import SnapshotScanSummary, StarAnalysisSummary
 
 
@@ -45,6 +47,21 @@ class RepoSkepticCliTests(unittest.TestCase):
         text = render_snapshot_scan_text(summary)
         self.assertIn("First install hook", text)
         self.assertIn("present", text)
+
+    def test_render_text_includes_maintenance_summary(self) -> None:
+        summary = AuditSummary(
+            target="owner/repo",
+            score=92,
+            verdict="low-risk",
+            findings=[],
+            metadata={
+                "repo": {"stars": 100, "forks": 20, "contributors": 3, "open_issues": 4, "open_prs": 1},
+                "owner": {"login": "owner", "type": "User", "public_repos": 4, "followers": 10},
+                "maintenance": {"days_since_last_commit": 12, "unique_recent_authors": 2},
+            },
+        )
+        text = render_text(summary)
+        self.assertIn("Maintenance: last commit 12 days ago", text)
 
 
 if __name__ == "__main__":

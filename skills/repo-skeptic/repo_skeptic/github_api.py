@@ -67,6 +67,9 @@ class GitHubClient:
     def releases(self, owner: str, repo: str) -> list[dict[str, Any]]:
         return self._run_gh_json("api", f"repos/{owner}/{repo}/releases?per_page=20")
 
+    def recent_commits(self, owner: str, repo: str, *, limit: int = 20) -> list[dict[str, Any]]:
+        return self._run_gh_json("api", f"repos/{owner}/{repo}/commits?per_page={limit}")
+
     def stargazers(self, owner: str, repo: str, stars_count: int, *, limit: int = 200) -> list[dict[str, Any]]:
         if stars_count <= 0 or limit <= 0:
             return []

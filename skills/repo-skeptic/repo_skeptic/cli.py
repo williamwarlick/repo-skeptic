@@ -36,12 +36,22 @@ def build_parser() -> argparse.ArgumentParser:
 def render_text(summary: AuditSummary) -> str:
     repo_meta = summary.metadata["repo"]
     owner_meta = summary.metadata["owner"]
+    maintenance_meta = summary.metadata.get("maintenance", {})
+    days_since_last_commit = maintenance_meta.get("days_since_last_commit")
+    recent_authors = maintenance_meta.get("unique_recent_authors")
+    maintenance_line = "Maintenance: unavailable"
+    if days_since_last_commit is not None and recent_authors is not None:
+        maintenance_line = (
+            f"Maintenance: last commit {days_since_last_commit} days ago | "
+            f"{recent_authors} unique recent authors"
+        )
     lines = [
         f"Target:   {summary.target}",
         f"Verdict:  {summary.verdict}",
         f"Score:    {summary.score}/100",
         f"Repo:     {repo_meta['stars']} stars | {repo_meta['forks']} forks | {repo_meta['contributors']} contributors | {repo_meta['open_issues']} open issues | {repo_meta['open_prs']} open PRs",
         f"Owner:    {owner_meta['login']} ({owner_meta['type']}) | {owner_meta['public_repos']} public repos | {owner_meta['followers']} followers",
+        maintenance_line,
         "",
         "Findings:",
     ]

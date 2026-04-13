@@ -103,6 +103,22 @@ class AuditSummary:
         }
 
 
+@dataclass(slots=True)
+class CommitContinuity:
+    sampled_recent_commits: int
+    last_commit_at: str | None
+    unique_recent_authors: int
+    recent_authors: list[str]
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "sampled_recent_commits": self.sampled_recent_commits,
+            "last_commit_at": self.last_commit_at,
+            "unique_recent_authors": self.unique_recent_authors,
+            "recent_authors": self.recent_authors,
+        }
+
+
 def now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -145,6 +161,28 @@ def analyze_star_burst(starred_at_values: list[str]) -> dict[str, float]:
         "largest_day_share": max(day_counts.values()) / sample_size,
         "largest_hour_share": max(hour_counts.values()) / sample_size,
     }
+
+
+def summarize_commit_continuity(commits: list[dict[str, Any]]) -> CommitContinuity:
+    recent_authors: list[str] = []
+    last_commit_at: str | None = None
+
+    for index, commit in enumerate(commits):
+        if index == 0:
+            last_commit_at = commit.get("commit", {}).get("author", {}).get("date")
+        author_payload = commit.get("author") or {}
+        author_login = author_payload.get("login")
+        author_name = commit.get("commit", {}).get("author", {}).get("name")
+        author = author_login or author_name
+        if author and author not in recent_authors:
+            recent_authors.append(author)
+
+    return CommitContinuity(
+        sampled_recent_commits=len(commits),
+        last_commit_at=last_commit_at,
+        unique_recent_authors=len(recent_authors),
+        recent_authors=recent_authors[:5],
+    )
 
 
 def inspect_snapshot(snapshot_dir: Path) -> ScanResult:
@@ -219,6 +257,8 @@ def build_findings(*,
     owner_age_days: int | None,
     owner_public_repos: int | None,
     repo_age_days: int | None,
+    days_since_last_commit: int | None,
+    unique_recent_commit_authors: int,
     stars: int,
     forks: int,
     open_issues: int,
@@ -268,6 +308,45 @@ def build_findings(*,
             detail=f"Repo averages {stars / repo_age_days:.1f} stars per day over {repo_age_days} days.",
             penalty=12,
             evidence=[f"stars_per_day={stars / repo_age_days:.1f}"],
+        ))
+
+    if days_since_last_commit is not None and stars >= 500 and days_since_last_commit > 365:
+        findings.append(Finding(
+            id="stale-maintenance",
+            severity="medium",
+            title="Visible maintainer activity is stale",
+            detail=f"The latest sampled commit is {days_since_last_commit} days old despite the repo having {stars} stars.",
+            penalty=10,
+            evidence=[f"days_since_last_commit={days_since_last_commit}", f"stars={stars}"],
+        ))
+    elif days_since_last_commit is not None and stars >= 2_000 and days_since_last_commit > 180:
+        findings.append(Finding(
+            id="aging-maintenance",
+            severity="low",
+            title="Maintainer activity has slowed materially",
+            detail=f"The latest sampled commit is {days_since_last_commit} days old on a repo with {stars} stars.",
+            penalty=4,
+            evidence=[f"days_since_last_commit={days_since_last_commit}", f"stars={stars}"],
+        ))
+
+    if (
+        days_since_last_commit is not None
+        and days_since_last_commit > 30
+        and stars >= 3_000
+        and unique_recent_commit_authors <= 1
+        and contributors <= 2
+    ):
+        findings.append(Finding(
+            id="single-maintainer-continuity",
+            severity="low",
+            title="Recent maintenance appears concentrated in one person",
+            detail="The recent commit sample points to a narrow maintainer bench for a widely-trusted repo.",
+            penalty=4,
+            evidence=[
+                f"days_since_last_commit={days_since_last_commit}",
+                f"unique_recent_commit_authors={unique_recent_commit_authors}",
+                f"contributors={contributors}",
+            ],
         ))
 
     if stars >= 500 and open_issues == 0 and open_prs == 0 and contributors <= 3:

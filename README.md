@@ -12,6 +12,7 @@ It checks:
 - account age and owner history
 - repo age versus star count
 - star clustering in recent history
+- maintainer continuity in recent commit history
 - stars/issues/PR/contributor ratio mismatches
 - install-time scripts in `package.json`
 - suspicious shell, network-exec, obfuscation, and bundled binaries
@@ -108,6 +109,7 @@ This is a review assistant, not a malware verdict engine. A clean score does not
 ## Design notes
 
 - Recent-star analysis samples the newest GitHub stargazers available through the GitHub GraphQL API.
+- Maintainer continuity samples the latest GitHub commits and tracks last-commit age plus recent author concentration.
 - Thin-profile stargazer checks sample up to 25 recent stargazers and look for empty profiles.
 - Registry checks are presence checks only. They do not prove downstream adoption.
 - The scanner is intentionally heuristic-based and should be extended for your threat model.

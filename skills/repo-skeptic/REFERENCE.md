@@ -29,6 +29,7 @@ Treat these as strong reasons to stop and review manually:
 - suspicious binaries in source or releases
 - severe star clustering paired with thin-profile stargazers
 - very new owner accounts paired with fast star growth
+- widely-trusted repos with stale commit history or a visibly narrow recent maintainer bench
 
 ## Trust Boundary
 

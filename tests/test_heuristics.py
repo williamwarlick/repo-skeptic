@@ -3,7 +3,16 @@ import tempfile
 import textwrap
 import unittest
 
-from repo_skeptic.heuristics import analyze_star_burst, inspect_snapshot, normalize_repo_target, score_findings, Finding
+from repo_skeptic.heuristics import (
+    Finding,
+    ScanResult,
+    analyze_star_burst,
+    build_findings,
+    inspect_snapshot,
+    normalize_repo_target,
+    score_findings,
+    summarize_commit_continuity,
+)
 
 
 class RepoSkepticHeuristicTests(unittest.TestCase):
@@ -49,6 +58,46 @@ class RepoSkepticHeuristicTests(unittest.TestCase):
         score, verdict = score_findings(findings)
         self.assertEqual(score, 0)
         self.assertEqual(verdict, "high-risk")
+
+    def test_summarize_commit_continuity_counts_recent_authors(self) -> None:
+        continuity = summarize_commit_continuity(
+            [
+                {"author": {"login": "alice"}, "commit": {"author": {"date": "2026-04-10T00:00:00Z", "name": "Alice"}}},
+                {"author": {"login": "alice"}, "commit": {"author": {"date": "2026-04-09T00:00:00Z", "name": "Alice"}}},
+                {"author": None, "commit": {"author": {"date": "2026-04-08T00:00:00Z", "name": "Bob"}}},
+            ]
+        )
+        self.assertEqual(continuity.sampled_recent_commits, 3)
+        self.assertEqual(continuity.last_commit_at, "2026-04-10T00:00:00Z")
+        self.assertEqual(continuity.unique_recent_authors, 2)
+        self.assertEqual(continuity.recent_authors, ["alice", "Bob"])
+
+    def test_build_findings_flags_stale_maintenance(self) -> None:
+        findings = build_findings(
+            owner_age_days=500,
+            owner_public_repos=10,
+            repo_age_days=800,
+            days_since_last_commit=420,
+            unique_recent_commit_authors=1,
+            stars=4000,
+            forks=300,
+            open_issues=12,
+            open_prs=4,
+            contributors=2,
+            star_burst={"sample_size": 10.0, "largest_day_share": 0.1, "largest_hour_share": 0.1},
+            suspicious_star_accounts_ratio=0.0,
+            scan_result=ScanResult(
+                install_scripts=[],
+                suspicious_commands=[],
+                suspicious_files=[],
+                package_names={},
+            ),
+            risky_release_assets=[],
+            registry_presence={},
+        )
+        finding_ids = {finding.id for finding in findings}
+        self.assertIn("stale-maintenance", finding_ids)
+        self.assertIn("single-maintainer-continuity", finding_ids)
 
 
 if __name__ == "__main__":
