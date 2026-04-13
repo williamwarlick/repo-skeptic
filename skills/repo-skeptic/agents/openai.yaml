@@ -1,0 +1,7 @@
+interface:
+  display_name: "Repo Skeptic"
+  short_description: "Verify GitHub repos before trust"
+  default_prompt: "Use $repo-skeptic to verify this GitHub repository before trusting or running it."
+
+policy:
+  allow_implicit_invocation: true
