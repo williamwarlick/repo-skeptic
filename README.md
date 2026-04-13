@@ -18,6 +18,15 @@ It checks:
 - executable release assets
 - package metadata that does not resolve in npm / PyPI / crates.io
 
+## Package layout
+
+- `scripts/`
+  Stable shell entrypoints for humans, CI, and other tools.
+- `skills/repo-skeptic/`
+  Self-contained `skills.sh` install payload, including docs, scripts, and Python implementation.
+- `skills/repo-skeptic/repo_skeptic/`
+  Importable Python package with a thin CLI layer and a deeper `RepoSkepticService` orchestration layer.
+
 ## Why this exists
 
 Stars, polished READMEs, and even active-looking issues are cheap to fake. This tool is intentionally conservative: it never executes target repo code. It only reads GitHub metadata, downloads a source snapshot tarball, and scans the files as text.
@@ -52,6 +61,16 @@ repo-skeptic owner/repo
 repo-skeptic star-analysis owner/repo
 repo-skeptic snapshot-scan owner/repo
 repo-skeptic https://github.com/owner/repo --json
+```
+
+Programmatic use:
+
+```python
+from repo_skeptic import RepoSkepticService
+
+service = RepoSkepticService()
+summary = service.audit("owner/repo", stars=50)
+print(summary.verdict, summary.score)
 ```
 
 ## skills.sh
@@ -92,12 +111,13 @@ This is a review assistant, not a malware verdict engine. A clean score does not
 - Thin-profile stargazer checks sample up to 25 recent stargazers and look for empty profiles.
 - Registry checks are presence checks only. They do not prove downstream adoption.
 - The scanner is intentionally heuristic-based and should be extended for your threat model.
-- The embedded skill lives at `skills/repo-skeptic/` and now contains the Python implementation plus callable scripts, so a `skills.sh` install is functional on its own.
+- The embedded skill lives at `skills/repo-skeptic/` and contains the Python implementation plus callable scripts, so a `skills.sh` install is functional on its own.
+- The CLI is intentionally thin; `RepoSkepticService` owns repo normalization, star analysis, snapshot lifecycle, and audit orchestration.
 
 ## Development
 
 ```bash
-python -m unittest discover -s tests
-python -m repo_skeptic.cli owner/repo --json
+PYTHONPATH=skills/repo-skeptic python -m unittest discover -s tests
+PYTHONPATH=skills/repo-skeptic python -m repo_skeptic.cli owner/repo --json
 ./scripts/audit-repo.sh owner/repo
 ```

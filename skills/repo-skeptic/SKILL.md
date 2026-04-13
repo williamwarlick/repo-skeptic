@@ -7,6 +7,7 @@ description: Verify GitHub repositories before trusting them. Use when the user 
 
 Use the bundled scripts from this repo instead of reconstructing the audit flow manually.
 The installed skill is self-contained: the scripts and Python implementation ship inside the skill folder.
+For interpretation details and command selection guidance, see [REFERENCE.md](REFERENCE.md).
 
 ## Quick start
 
@@ -20,23 +21,9 @@ From the repo root:
 ## Workflow
 
 1. Normalize the target repo to `owner/repo` or a GitHub URL.
-2. Run `scripts/audit-repo.sh` first when the user wants an overall trust check.
-3. Run `scripts/star-analysis.sh` when the user specifically wants to inspect suspicious star growth or thin-profile stargazers.
-4. Run `scripts/snapshot-scan.sh` when the user specifically wants install-hook, suspicious-command, or bundled-binary evidence.
-5. Review the highest-severity findings before making any trust recommendation.
-6. Treat `low-risk` as "no high-signal heuristics fired", not as "safe".
-7. Escalate anything involving install hooks, network-exec patterns, bundled binaries, or suspicious release assets.
-
-## What the audit covers
-
-- owner account age and public repo history
-- repo age versus star count
-- recent star clustering
-- stars/issues/PR/contributor mismatch
-- install-time scripts in `package.json`
-- suspicious shell, network-exec, obfuscation, and bundled binaries
-- executable release assets
-- package registry presence checks for npm, PyPI, and crates.io
+2. Pick the smallest script that answers the user's question.
+3. Use `audit-repo` by default when the user wants an overall trust check.
+4. Escalate anything involving install hooks, network-exec patterns, bundled binaries, or suspicious release assets.
 
 ## Notes
 
