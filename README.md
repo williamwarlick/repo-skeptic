@@ -1,0 +1,68 @@
+# repo-skeptic
+
+`repo-skeptic` verifies GitHub repositories before you trust, clone, or run them.
+
+It checks:
+
+- account age and owner history
+- repo age versus star count
+- star clustering in recent history
+- stars/issues/PR/contributor ratio mismatches
+- install-time scripts in `package.json`
+- suspicious shell, network-exec, obfuscation, and bundled binaries
+- executable release assets
+- package metadata that does not resolve in npm / PyPI / crates.io
+
+## Why this exists
+
+Stars, polished READMEs, and even active-looking issues are cheap to fake. This tool is intentionally conservative: it never executes target repo code. It only reads GitHub metadata, downloads a source snapshot tarball, and scans the files as text.
+
+## Requirements
+
+- Python 3.11+
+- [`gh`](https://cli.github.com/) authenticated with `repo` scope
+
+## Install
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+## Usage
+
+```bash
+repo-skeptic owner/repo
+repo-skeptic https://github.com/owner/repo --json
+```
+
+Example:
+
+```bash
+repo-skeptic anthropics/claude-code
+```
+
+## Output
+
+The CLI produces:
+
+- a `score` from 0-100
+- a `verdict` of `low-risk`, `needs-review`, or `high-risk`
+- concrete findings with evidence lines
+
+This is a review assistant, not a malware verdict engine. A clean score does not mean a repo is safe.
+
+## Design notes
+
+- Recent-star analysis samples the newest GitHub stargazers available through the GitHub GraphQL API.
+- Thin-profile stargazer checks sample up to 25 recent stargazers and look for empty profiles.
+- Registry checks are presence checks only. They do not prove downstream adoption.
+- The scanner is intentionally heuristic-based and should be extended for your threat model.
+
+## Development
+
+```bash
+python -m unittest discover -s tests
+python -m repo_skeptic.cli owner/repo --json
+```
