@@ -74,27 +74,27 @@ summary = service.audit("owner/repo", stars=50)
 print(summary.verdict, summary.score)
 ```
 
-## skills.sh
+## Install from skills.sh
 
-Install the embedded skill directly from GitHub:
+Install the skill from GitHub:
 
 ```bash
 npx skills add williamwarlick/repo-skeptic --skill repo-skeptic
 ```
 
-List the skills that `skills` detects in this repo:
+For Codex:
+
+```bash
+npx skills add williamwarlick/repo-skeptic --skill repo-skeptic -a codex -y
+```
+
+See what this repo exposes:
 
 ```bash
 npx skills add williamwarlick/repo-skeptic --list
 ```
 
-An installed `repo-skeptic` skill includes its own scripts and Python implementation inside the installed skill directory. It does not rely on files outside the skill folder.
-
-Example:
-
-```bash
-repo-skeptic anthropics/claude-code
-```
+`repo-skeptic` is the skill name. `williamwarlick/repo-skeptic` is the GitHub source. The installed skill ships its own scripts and Python code.
 
 ## Output
 
